@@ -46,7 +46,7 @@ def check_article(article_id: str):
         False: means not uploaded
         True: means uploaded
     """
-    with open('.articles_log.txt', 'r') as read_lf:
+    with open('articles_log.txt', 'r') as read_lf:
         article_ids = read_lf.readlines()
     guids_list = []
     for i in article_ids:
@@ -55,7 +55,7 @@ def check_article(article_id: str):
     if article_id in guids_list:
         return True
     else:
-        with open('.articles_log.txt', 'a') as write_lf:
+        with open('articles_log.txt', 'a') as write_lf:
             write_lf.write(article_id + "\n")
         return False
 
