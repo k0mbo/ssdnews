@@ -24,20 +24,24 @@ def upload_to_page(articles):
         if article[0] == "Sudans Post":
             guid = f"{str(a_id)}000"
             source = "Sudans Post"
-            the_post = article[1] + "\n\n\n" + article[6] + "\n\t" + source
+            cat = article[7].replace(' ', '_')
+            categories = cat.replace('/', ' #')
+            like_page = "Like and follow our page for more updates."
+            the_post = article[1] + "\n\n\n" + article[6] + "\n\t" + like_page + "\n\n" + source + "\n\n" + categories
         elif article[0] == "Radio Tamazuj - Latest news":
             e_guid = str(a_id)
             guid = e_guid[:8]
             source = "Radio Tamazuj - Latest news"
             the_post = article[1] + "\n\n\n" + article[6] + "\n\t" + source
-        if check_article(guid):
-            continue
-        else:
-            print(f"Uploading and saving article to log: {article[1]}.")
 
         j = requests.post(f"{graph_api}{id}/feed?message={the_post}&access_token={access_token}")
         if j.status_code != 200:
             print(f"Unsuccessful: {j.status_code}")
+        elif j.status_code == 200:
+            if check_article(guid):
+                continue
+            else:
+                print(f"Uploading and saving article to log: {article[1]}.")
 
 
 def check_article(article_id: str):
