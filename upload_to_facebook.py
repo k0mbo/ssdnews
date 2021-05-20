@@ -33,15 +33,19 @@ def upload_to_page(articles):
             guid = e_guid[:8]
             source = "Radio Tamazuj - Latest news"
             the_post = article[1] + "\n\n\n" + article[6] + "\n\t" + source
+        new_guids = []
+        if check_article(guid):
+            new_guids.append(guid)
+            continue
+        else:
+            print(f"Uploading and saving article to log: {article[1]}.")
 
         j = requests.post(f"{graph_api}{id}/feed?message={the_post}&access_token={access_token}")
+
         if j.status_code != 200:
             print(f"Unsuccessful: {j.status_code}")
-        elif j.status_code == 200:
-            if check_article(guid):
-                continue
-            else:
-                print(f"Uploading and saving article to log: {article[1]}.")
+            for g in new_guids:
+                print(g)
 
 
 def check_article(article_id: str):
