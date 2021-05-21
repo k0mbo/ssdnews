@@ -27,7 +27,7 @@ def upload_to_page(articles):
             cat = article[7].replace(' ', '_')
             categories = cat.replace('/', ' #')
             like_page = "Like and follow our page for more updates."
-            the_post = article[1] + "\n\n\n" + article[6] + "\n\t" + like_page + "\n" + source
+            the_post = article[1] + "\n\n\n" + article[6] + "\n\n" + like_page + "\n\n" + source
         elif article[0] == "Radio Tamazuj - Latest news":
             e_guid = str(a_id)
             guid = e_guid[:8]
