@@ -18,7 +18,7 @@ def upload_to_page(articles):
     graph_api = "https://graph.facebook.com/"
     access_token = "EAALc0Lt6BcoBAP2WD5HpQ2fe2iiuCTQg2L0sbVOP1jQPMELuZAXNmFnu3v7yZALHwGgjuFpNfm3b\
             EplQArOD3nIxnQRYrfcHpAXWvWmtx96xX3ZBTeY6fkwTZBucz1Nlm70tLO5tiEWb281X1aXV7rv6qBVkqvuF1n7TZBv7dpQTpzCtK1kGo"
-    id = "112365750247736"
+    user_id = "112365750247736"
     for article in articles:
         a_id = article[4]
         if article[0] == "Sudans Post":
@@ -27,27 +27,23 @@ def upload_to_page(articles):
             cat = article[7].replace(' ', '_')
             categories = cat.replace('/', ' #')
             like_page = "Like and follow our page for more updates."
-            the_post = article[1] + "\n\n\n" + article[6] + "\n\t" + like_page + "\n\n" + source + "\n\n" + str(categories)
-            print(the_post)
+            the_post = article[1] + "\n\n\n" + article[6] + "\n\t" + like_page + "\n" + source
+
         elif article[0] == "Radio Tamazuj - Latest news":
             e_guid = str(a_id)
             guid = e_guid[:8]
             source = "Radio Tamazuj - Latest news"
-            the_post = article[1] + "\n\n\n" + article[6] + "\n\t" + source
+            the_post = article[1] + "\n\n\n" + article[6] + "\n\t" + like_page + "\n\n" + source
 
-        new_guids = []
         if check_article(guid):
-            new_guids.append(guid)
             continue
         else:
             print(f"Uploading and saving article to log: {article[1]}.")
 
-        j = requests.post(f"{graph_api}{id}/feed?message={the_post}&access_token={access_token}")
+        j = requests.post(f"{graph_api}{user_id}/feed?message={the_post}&access_token={access_token}")
 
         if j.status_code != 200:
             print(f"Unsuccessful: {j.text}")
-            for g in new_guids:
-                print(g)
 
 
 def check_article(article_id: str):
