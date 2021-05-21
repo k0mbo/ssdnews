@@ -41,12 +41,11 @@ def upload_to_page(articles):
                 j = requests.post(f"{graph_api}{user_id}/feed?message={the_post}&access_token={access_token}")
                 if j.status_code == 200:
                     add_article(guid)
+                print(f"Uploaded and Saved: {article[1]}")
             except Exception as e:
                 print(e)
             if j.status_code != 200:
                 print(f"Unsuccessful: {j.text}")
-
-
 
 
 def check_article(article_id: str):
