@@ -1,6 +1,6 @@
 """
 Transfers data from old database to new database
-TODO: Add 'image link to news_article table'
+TODO: Add 'image link to news_article table' & Change pubdate value fro text to datetime
 """
 import sqlite3
 
