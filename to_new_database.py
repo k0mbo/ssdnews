@@ -1,3 +1,7 @@
+"""
+Transfers data from old database to new database
+TODO: Add 'image link to news_article table'
+"""
 import sqlite3
 
 new_database = "../ssdnewsnow/thecomradenews.db"
@@ -10,6 +14,18 @@ def save_data(data_tuple_list: list):
     """
     con = sqlite3.connect(new_database)
     cur = con.cursor()
+    cur.execute('''CREATE TABLE "news_articles"(
+        "id" integer NOT NULL,
+        "source" text,
+        "title" text,
+        "link" text,
+        "pubdate" TEXT,
+        "guid" integer,
+        "description" text,
+        "content" text,
+        "categories" text,
+        PRIMARY KEY("id" AUTOINCREMENT)
+    )''')
 
     for i in data_tuple_list:
         try:
@@ -45,7 +61,7 @@ for j in retrieve_data():
     article_guid = j[4]
     article_description = j[5]
     article_content = j[6]
-    categories = j[7]
+    categories = "Not available"
     data_tuple = (
         article_id,
         source,
