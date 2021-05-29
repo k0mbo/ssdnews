@@ -32,6 +32,7 @@ def upload_to_page(articles):
             e_guid = str(a_id)
             guid = e_guid[:8]
             source = "Radio Tamazuj - Latest news"
+            like_page = "Like and follow our page for more updates."
             the_post = article[1] + "\n\n\n" + article[6] + "\n\t" + like_page + "\n\n" + source
 
         if check_article(guid):

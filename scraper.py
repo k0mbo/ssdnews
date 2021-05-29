@@ -1,7 +1,14 @@
+"""
+REQUIRES REWRITING BEFORE ANYMORE USAGE!!!!!
+"""
+
+
 from bs4 import BeautifulSoup
+from datetime import datetime
 import re
 import requests
 import sqlite3
+from time import strptime
 
 
 def save_data(data_tuple_list: list):
@@ -20,13 +27,14 @@ def save_data(data_tuple_list: list):
                         description text,
                         content text,
                         categories text,
-                        UNIQUE(source, title, link, pubdate, guid, description, content, categories)
+                        image_link TEXT,
+                        UNIQUE(source, title, link, pubdate, guid, description, content, categories, image_link)
                         )''')
     except sqlite3.OperationalError as e:
         print(e)
     for i in data_tuple_list:
         try:
-            cur.execute("INSERT INTO articles values (?, ?, ?, ?, ?, ?, ?, ?)", i)
+            cur.execute("INSERT INTO articles values (?, ?, ?, ?, ?, ?, ?, ?, ?)", i)
             print(f"Article Added: '{i[1]}'")
             con.commit()
         except sqlite3.OperationalError as e:
@@ -36,9 +44,21 @@ def save_data(data_tuple_list: list):
     con.close()
 
 
+def retrieve_data():
+    """" Retrieves articles from the sqlite database """
+    con = sqlite3.connect("/home/cyxnide/websites/ssdnewsnow/ssdnewsnow.sqlite3")
+    cur = con.cursor()
+    iid = cur.execute("SELECT max(id) FROM news_article")
+    return iid
+
+
+id_ = iid[0]
+
+
 def article_cleanser(dirty_content):
     """Cleanse the articles and call the saving function to save it"""
-    count = 1
+    global id_
+
     articles_dict = {}
     source = dirty_content.find("title").get_text()
     data_tuple_list = []
@@ -46,17 +66,16 @@ def article_cleanser(dirty_content):
     for item in dirty_content.find_all("item"):
         article_link = item.link.get_text()
 
-        pubdate = item.pubDate.get_text().split(' ')  # prints: monday, 15,May,2021,06:10:13,+0000
-        a_pubdate = pubdate[1:]                      # the following code is to remove the day of
-        article_pubdate = ""                         # the week from the string "pubdate"
-        for r in a_pubdate:
-            article_pubdate += f"{r},"
+        jj = item.pubDate.get_text().split(' ')
+        article_pubdate = datetime(int(jj[3]), int(strptime(jj[2], '%b').tm_mon), int(jj[1]), int(jj[4][:2]),
+                                   int(jj[4][3:5]),
+                                   int(jj[4][6:])).isoformat(' ')
 
         if source == "Sudans Post":
             """ If the feed is for Sudans Post then it should scrap accordingly"""
             article_number = item.guid.get_text()
             guid_list = re.findall("(?<=p=)[0-9]{5}", article_number)
-            article_guid = int(guid_list[0])
+            article_guid = int(guid_list[0] + '000')
             article_description = item.description.get_text().replace('[&#8230;]', '....')
             article_description = article_description.replace('&#8217;', "'")
             article_title = item.title.get_text().replace(u'\xa0', ' ')
@@ -76,6 +95,8 @@ def article_cleanser(dirty_content):
             for c in article_soup.find_all('p'):
                 article_content += "\n" + c.get_text()
 
+            image_link = article_soup.find('a')["href"]
+
             categories = ""
             for cat in item.find_all("category"):
                 categories += f"/{cat.get_text().lower()}"
@@ -85,25 +106,30 @@ def article_cleanser(dirty_content):
 
             article_title = item.title.get_text()
             article_description = item.description.get_text()
-            article_guid = item.guid.get_text()
-            categories = "None"
+            article_guid = item.guid.get_text()[:8]
+            categories = "Not available"
 
             def get_content_from_link(link):
                 """ 
                 Gets the article from the link, because radio tamazuj doesn't 
                 post the article content on the rss feed
                 """
-                content = ""
+
                 page = requests.get(link)
                 soup = BeautifulSoup(page.text, "lxml")
-                body = soup.select(".body-text")
-                for i in body:
-                    content += i.get_text()
-                return content
+                return soup
 
-            article_content = get_content_from_link(article_link).replace(u'\xa0', ' ')
+            soup = get_content_from_link(article_link)
+            image_link = "https://radiotamazuj.org" + soup.find("img")["src"]
 
-        articles_dict[count] = {
+            body = soup.select(".body-text")
+            content = ""
+            for i in body:
+                content += i.get_text()
+            article_content = content.replace(u'\xa0', ' ')
+
+        articles_dict[id_] = {
+            "id": id_,
             "source": source,
             "Title": article_title,
             "Link": article_link,
@@ -112,8 +138,10 @@ def article_cleanser(dirty_content):
             "Description": article_description,
             "Content": article_content,
             "categories": categories,
+            "image_link": image_link,
         }
         data_tuple = (
+            id_,
             source,
             article_title,
             article_link,
@@ -121,9 +149,10 @@ def article_cleanser(dirty_content):
             article_guid,
             article_description,
             article_content,
-            categories
+            categories,
+            image_link,
         )
-        count += 1  # counts number of articles
+        id_ += 1  # counts number of articles
         data_tuple_list.append(data_tuple)
     return data_tuple_list
 
@@ -142,14 +171,6 @@ def article_extractor(rss_feed_link):
     return dirty_content
 
 
-class Scraper:
-    """ The scraper of rss feeds"""
-
-    def __init__(self, rss_feed):
-        """ Initializing the scraper """
-        self.rss_feed = rss_feed
-
-
 rss_feeds = ["https://radiotamazuj.org/en/rss/news.xml",
              "https://www.sudanspost.com/feed/", ]
 
@@ -157,8 +178,9 @@ rss_feeds = ["https://radiotamazuj.org/en/rss/news.xml",
 def main():
     for i in rss_feeds:
         d = article_extractor(i)
-        j = article_cleanser(d)
-        save_data(j)
+        save_data(article_cleanser(d))
+
+
 
 
 main()
